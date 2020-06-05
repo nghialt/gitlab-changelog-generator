@@ -141,9 +141,9 @@ def get_commits_since_date(date: str, cli_args: dict) -> list:
     until_date = None
     while not done:
         request_url = f"{cli_args['ip_address']}/api/v{cli_args['api_version']}/projects/{cli_args['project']}" \
-                      f"/repository/commits/?ref_name={cli_args['branch_two']}&since={date}"
+                      f"/repository/commits/?ref_name={cli_args['branch_two']}&since={quote(date)}"
         if until_date:
-            request_url += f"&until={until_date}"
+            request_url += f"&until={quote(until_date)}"
         logger.info(
             f"Requesting commits on branch '{cli_args['branch_two']}' in repository '{cli_args['project']}'"
             f" since date '{date}' with URL: {request_url}"
@@ -185,4 +185,5 @@ def get_commits_since_date(date: str, cli_args: dict) -> list:
         key=lambda x: datetime.datetime.strftime(
             parser.parse(x["committed_date"]), "%Y-%m-%dT%H:%M:%S.%f"
         ),
+        reverse=True,
     )
