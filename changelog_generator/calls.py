@@ -57,7 +57,7 @@ def get_last_commit_date(cli_args: dict) -> str:
     logger.info(f"response")
     commit_date = get_date_object(commit_dict["committed_date"]) + datetime.timedelta(seconds=1)
 
-    return datetime.datetime.strftime(commit_date, "%Y-%m-%dT%H:%M:%S.%f")
+    return get_date_string(commit_date)
 
 
 def get_closed_issues_for_project(cli_args: dict) -> dict:
@@ -136,41 +136,54 @@ def get_commits_since_date(date: str, cli_args: dict) -> list:
     all commits since a given date.
     """
 
-    request_url = f"{cli_args['ip_address']}/api/v{cli_args['api_version']}/projects/{cli_args['project']}/repository/commits/?ref_name={cli_args['branch_two']}&since={date}"
-    logger.info(
-        f"Requesting commits on branch '{cli_args['branch_two']}' in repository '{cli_args['project']}' since date '{date}' with URL: {request_url}"
-    )
-    try:
-        response = requests.get(
-            request_url,
-            headers={"PRIVATE-TOKEN": cli_args["token"]}
-            if "token" in cli_args
-            else None,
-            verify=cli_args["ssl"],
+    clean_response = []
+    done = False
+    until_date = None
+    while not done:
+        request_url = f"{cli_args['ip_address']}/api/v{cli_args['api_version']}/projects/{cli_args['project']}" \
+                      f"/repository/commits/?ref_name={cli_args['branch_two']}&since={quote(date)}"
+        if until_date:
+            request_url += f"&until={quote(until_date)}"
+        logger.info(
+            f"Requesting commits on branch '{cli_args['branch_two']}' in repository '{cli_args['project']}'"
+            f" since date '{date}' with URL: {request_url}"
         )
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as ex:
-        logger.error(
-            f"{get_commits_since_date.__name__} call to GitLab API failed with HTTPError: {ex}"
-        )
-        sys.exit(1)
-    except requests.exceptions.ConnectionError as ex:
-        logger.error(
-            f"{get_commits_since_date.__name__} call to GitLab API failed with ConnectionError: {ex}"
-        )
-        sys.exit(1)
+        try:
+            response = requests.get(
+                request_url,
+                headers={"PRIVATE-TOKEN": cli_args["token"]}
+                if "token" in cli_args
+                else None,
+                verify=cli_args["ssl"],
+            )
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as ex:
+            logger.error(
+                f"{get_commits_since_date.__name__} call to GitLab API failed with HTTPError: {ex}"
+            )
+            sys.exit(1)
+        except requests.exceptions.ConnectionError as ex:
+            logger.error(
+                f"{get_commits_since_date.__name__} call to GitLab API failed with ConnectionError: {ex}"
+            )
+            sys.exit(1)
 
-    logger.debug(response.status_code)
-    logger.debug(response.json())
+        logger.debug(response.status_code)
+        logger.debug(response.json())
 
-    response_json = response.json()
-    clean_response = [
-        item for item in response_json if len(list(item["parent_ids"])) == 1
-    ]
+        response_json = response.json()
+        if not response_json or (clean_response and response_json[-1]["id"] == clean_response[-1]["id"]):
+            break
+        until_date = response_json[-1]["created_at"]
+        until_date = get_date_object(until_date) - datetime.timedelta(milliseconds=1)
+        until_date = get_date_string(until_date)
+        clean_response = clean_response + response_json
+
 
     return sorted(
         clean_response,
         key=lambda x: datetime.datetime.strftime(
             parser.parse(x["committed_date"]), "%Y-%m-%dT%H:%M:%S.%f"
         ),
+        reverse=True,
     )

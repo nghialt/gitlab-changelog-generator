@@ -47,13 +47,14 @@ def generate_changelog(cli_args: dict) -> str:
     }
     commits_type_dict[""] = []
     for commit in new_commits:
-        lines = commit["message"].split("\n")
-        first_line = lines[0]
-        match_obj = re.match(r'^(.+)\((.+)\):', first_line)
+        title = commit["title"]
+        match_obj = re.match(r'^(.+)\((.+)\):', title)
         change_type = match_obj.group(1)
         proj = match_obj.group(2)
         if proj not in allowed_projs:
+            logger.info(title)
             continue
+        logger.info(title)
         if change_type in type_map:
             commits_type_dict[change_type].append(commit)
         else:
