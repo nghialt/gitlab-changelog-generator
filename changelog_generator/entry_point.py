@@ -1,10 +1,21 @@
 from argparse import ArgumentParser
+from .zpm_generator import ZPMGenerator
 
 from changelog_generator.generator import generate_changelog
 
+systems = {
+    "zpm": ZPMGenerator,
+}
 
 def process_arguments() -> dict:
     parser = ArgumentParser(prog="changegen")
+    parser.add_argument(
+        "-s",
+        "--system",
+        dest="system",
+        help="specify system, available options: zpm, zpw",
+        required=True,
+    )
     parser.add_argument(
         "-i",
         "--ip",
@@ -75,6 +86,7 @@ def process_arguments() -> dict:
     args = parser.parse_args()
 
     return {
+        "system": args.system,
         "ip_address": args.ip,
         "api_version": args.api,
         # "project_group": args.group,
@@ -89,7 +101,12 @@ def process_arguments() -> dict:
 
 
 def main():
-    generate_changelog(process_arguments())
+    cli_args = process_arguments()
+    generator = None
+    generator = systems[cli_args.system]()
+    if not generator:
+        return
+    generator.generate_changelog(cli_args)
 
 
 if __name__ == "__main__":
