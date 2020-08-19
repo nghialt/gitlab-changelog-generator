@@ -29,8 +29,6 @@ class ZPMGenerator:
         # Get the date of the last commit
         last_commit = get_last_commit_date(cli_args)
 
-        closed_issues_since_last_tag = self.get_closed_issues_since_last_tag(cli_args)
-
         # Get any commits since that date
         new_commits = get_commits_since_date(last_commit, cli_args)
 
@@ -87,12 +85,6 @@ class ZPMGenerator:
                         modified_changelog.write("\n".join("    " + line for line in lines[1:] if line))
                         modified_changelog.write("\n")
 
-                if closed_issues_since_last_tag:
-                    modified_changelog.write(f"\n### Closed Issues\n")
-                    [
-                        modified_changelog.write(f"* {closed_issue['title']}")
-                        for closed_issue in closed_issues_since_last_tag
-                    ]
                 modified_changelog.write(f"\n")
                 modified_changelog.write(original_changelog_data)
                 return f"{file_path} updated successfully"
