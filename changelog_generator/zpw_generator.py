@@ -77,10 +77,13 @@ class ZPWGenerator:
 
         # Determine whether a CHANGELOG.md file already exists
         if not os.path.isfile(self.file_path):
-            open(self.file_path, 'a').close()
+            open(self.file_path, 'w').close()
         with open(self.file_path, "r") as original_changelog:
-            original_changelog_data = original_changelog.read()
+            original_changelog_data = original_changelog.readlines()
+            if len(original_changelog_data) > 2:
+                original_changelog_data = original_changelog_data[2:]
             with open(self.file_path, "w") as modified_changelog:
+                modified_changelog.write("# CHANGELOG\n\n")
                 modified_changelog.write(f"## v{version} - {current_date}\n")
                 for type in self.type_order:
                     commits = commits_type_dict[type]
@@ -101,8 +104,8 @@ class ZPWGenerator:
                         modified_changelog.write("\n".join("    " + line for line in lines[1:] if line))
 
                 modified_changelog.write(f"\n")
-                modified_changelog.write(original_changelog_data)
-                return f"{self.file_path} updated successfully"
+                modified_changelog.write(''.join(original_changelog_data))
+        return f"{self.file_path} updated successfully"
 
 
     def get_closed_issues_since_last_tag(self, cli_args: dict) -> list:
@@ -126,14 +129,12 @@ class ZPWGenerator:
         if 'version' in cli_args:
             return cli_args['version']
         default_version = "0.0.0"
-        file_path = self.file_path
-        if not os.path.isfile(file_path):
-            open(file_path, 'a').close()
+        if not os.path.isfile(self.file_path):
+            return default_version
         version_regex = r'^## v([0-9\.]+) - [0-9\/]+$'
-        with open(file_path, "r") as original_changelog:
+        with open(self.file_path, "r") as original_changelog:
             line = original_changelog.readline()
             while line:
-                print('xxx line ', line)
                 match_obj = re.match(version_regex, line)
                 if match_obj:
                     version = match_obj.group(1)
