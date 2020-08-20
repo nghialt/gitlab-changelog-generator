@@ -45,7 +45,7 @@ class ZPWGenerator:
 
         # Get the current date so that we can add it to the CHANGELOG.md document
         date = datetime.datetime.now()
-        current_date = date.strftime("%Y-%m-%d")
+        current_date = date.strftime("%Y/%m/%d")
 
         allowed_projs = self.include_projs
         allowed_projs.append(cli_args["sub_project"])
@@ -72,15 +72,16 @@ class ZPWGenerator:
             else:
                 commits_type_dict[""].append(commit)
 
+        version = self.get_version(cli_args)
+        version = self.get_next_version(version, commits_type_dict, cli_args)
+
         # Determine whether a CHANGELOG.md file already exists
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'a').close()
         with open(self.file_path, "r") as original_changelog:
             original_changelog_data = original_changelog.read()
             with open(self.file_path, "w") as modified_changelog:
-                version = self.get_version(cli_args)
-                version = self.get_next_version(version, commits_type_dict, cli_args)
-                modified_changelog.write(f"## v{version} ({current_date})\n")
+                modified_changelog.write(f"## v{version} - {current_date}\n")
                 for type in self.type_order:
                     commits = commits_type_dict[type]
                     if not commits:
@@ -89,15 +90,15 @@ class ZPWGenerator:
                         f"\n### {self.type_map[type]} \n"
                     )
                     for commit in commits:
-                        modified_changelog.write("\n")
                         logger.debug("commit ")
                         logger.debug(commit)
                         lines = commit["message"].split("\n")
                         modified_changelog.write(
-                            f"  * {commit['committed_date'][:10]} - {lines[0]} \n"
+                            f"  * {commit['committed_date'][:10]} - {lines[0]}"
                         )
+                        if len(lines) > 1:
+                            modified_changelog.write("\n")
                         modified_changelog.write("\n".join("    " + line for line in lines[1:] if line))
-                        modified_changelog.write("\n")
 
                 modified_changelog.write(f"\n")
                 modified_changelog.write(original_changelog_data)
@@ -128,25 +129,19 @@ class ZPWGenerator:
         file_path = self.file_path
         if not os.path.isfile(file_path):
             open(file_path, 'a').close()
-        line = None
-        with open(file_path, "r") as original_changelog:
-            cur_line = 0
-            while True:
-                line = original_changelog.readline()
-                if not line:
-                    break
-                cur_line += 1
-        if not line:
-            return default_version
         version_regex = r'^## v([0-9\.]+) - [0-9\/]+$'
-        match_obj = re.match(version_regex, line)
-        if match_obj:
-            version = match_obj.group(1)
-        version = None
-        if not version:
-            return default_version
-
-        return version
+        with open(file_path, "r") as original_changelog:
+            line = original_changelog.readline()
+            while line:
+                print('xxx line ', line)
+                match_obj = re.match(version_regex, line)
+                if match_obj:
+                    version = match_obj.group(1)
+                    if version:
+                        return version
+                line = original_changelog.readline()
+        
+        return default_version
 
     def get_next_version(self, version, types_flags, cli_args: dict) -> str:
         if 'version' in cli_args:
