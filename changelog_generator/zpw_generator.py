@@ -18,26 +18,26 @@ class ZPWGenerator:
     include_projs = []
     
     patch_types = {
-        "fix": None,
-        "chore": None,
-        "test": None,
-        "": None,
+        'fix': None,
+        'chore': None,
+        'test': None,
+        '': None,
     }
     minor_types = {
-        "feat": None,
-        "chg": None,
+        'feat': None,
+        'chg': None,
     }
     type_map = {
-        "fix": "Fixed",
-        "feat": "Added",
-        "chg": "Changes",
-        "chore": "Additions",
-        "test": "Tests",
-        "": "Others",
+        'fix': 'Fixed',
+        'feat': 'Added',
+        'chg': 'Changes',
+        'chore': 'Additions',
+        'test': 'Tests',
+        '': 'Others',
     }
-    file_path = f"CHANGELOG.md"
+    file_path = f'CHANGELOG.md'
 
-    type_order = ["feat", "chg", "fix", "chore", "test", "", ]
+    type_order = ['feat', 'chg', 'fix', 'chore', 'test', '', ]
 
     def generate_changelog(self, cli_args: dict) -> str:
         # Get any commits since that date
@@ -45,21 +45,21 @@ class ZPWGenerator:
 
         # Get the current date so that we can add it to the CHANGELOG.md document
         date = datetime.datetime.now()
-        current_date = date.strftime("%Y/%m/%d")
+        current_date = date.strftime('%Y/%m/%d')
 
         allowed_projs = self.include_projs
-        allowed_projs.append(cli_args["sub_project"])
-        logger.debug("allow_projs")
+        allowed_projs.append(cli_args['sub_project'])
+        logger.debug('allow_projs')
         logger.debug(allowed_projs)
 
         commits_type_dict = {
             type: [] for type in self.type_map
         }
-        commits_type_dict[""] = []
+        commits_type_dict[''] = []
         for commit in new_commits:
-            title = commit["title"]
+            title = commit['title']
             match_obj = re.match(r'^(.+)(\((.+)\))?:', title)
-            change_type = ""
+            change_type = ''
             if match_obj:
                 change_type = match_obj.group(1)
                 proj = match_obj.group(2)
@@ -70,7 +70,7 @@ class ZPWGenerator:
             if change_type in self.type_map:
                 commits_type_dict[change_type].append(commit)
             else:
-                commits_type_dict[""].append(commit)
+                commits_type_dict[''].append(commit)
 
         version = self.get_version(cli_args)
         version = self.get_next_version(version, commits_type_dict, cli_args)
@@ -78,34 +78,34 @@ class ZPWGenerator:
         # Determine whether a CHANGELOG.md file already exists
         if not os.path.isfile(self.file_path):
             open(self.file_path, 'w').close()
-        with open(self.file_path, "r") as original_changelog:
+        with open(self.file_path, 'r') as original_changelog:
             original_changelog_data = original_changelog.readlines()
             if len(original_changelog_data) > 2:
                 original_changelog_data = original_changelog_data[2:]
-            with open(self.file_path, "w") as modified_changelog:
-                modified_changelog.write("# CHANGELOG\n\n")
-                modified_changelog.write(f"## v{version} - {current_date}\n")
+            with open(self.file_path, 'w') as modified_changelog:
+                modified_changelog.write('# CHANGELOG\n\n')
+                modified_changelog.write(f'## v{version} - {current_date}\n')
                 for type in self.type_order:
                     commits = commits_type_dict[type]
                     if not commits:
                         continue
                     modified_changelog.write(
-                        f"\n### {self.type_map[type]} \n"
+                        f'\n### {self.type_map[type]} \n'
                     )
                     for commit in commits:
-                        logger.debug("commit ")
+                        logger.debug('commit ')
                         logger.debug(commit)
-                        lines = commit["message"].split("\n")
+                        lines = commit['message'].split('\n')
                         modified_changelog.write(
                             f"  * {commit['committed_date'][:10]} - {lines[0]}"
                         )
                         if len(lines) > 1:
-                            modified_changelog.write("\n")
-                        modified_changelog.write("\n".join("    " + line for line in lines[1:] if line))
+                            modified_changelog.write('\n')
+                        modified_changelog.write('\n'.join('    ' + line for line in lines[1:] if line))
 
-                modified_changelog.write(f"\n")
+                modified_changelog.write(f'\n')
                 modified_changelog.write(''.join(original_changelog_data))
-        return f"{self.file_path} updated successfully"
+        return f'{self.file_path} updated successfully'
 
 
     def get_closed_issues_since_last_tag(self, cli_args: dict) -> list:
@@ -116,11 +116,11 @@ class ZPWGenerator:
         closed_issues_since_tag = []
         for issue in closed_issues:
             logger.info(issue)
-            if dateutil.parser.parse(issue["closed_at"]) > dateutil.parser.parse(
+            if dateutil.parser.parse(issue['closed_at']) > dateutil.parser.parse(
                     last_tagged_release_date
             ):
                 closed_issues_since_tag.append(
-                    {"closed_at": issue["closed_at"], "title": issue["title"]}
+                    {'closed_at': issue['closed_at'], 'title': issue['title']}
                 )
 
         return closed_issues_since_tag
@@ -128,11 +128,11 @@ class ZPWGenerator:
     def get_version(self, cli_args: dict) -> str:
         if 'version' in cli_args:
             return cli_args['version']
-        default_version = "0.0.0"
+        default_version = '0.0.0'
         if not os.path.isfile(self.file_path):
             return default_version
         version_regex = r'^## v([0-9\.]+) - [0-9\/]+$'
-        with open(self.file_path, "r") as original_changelog:
+        with open(self.file_path, 'r') as original_changelog:
             line = original_changelog.readline()
             while line:
                 match_obj = re.match(version_regex, line)
@@ -155,4 +155,4 @@ class ZPWGenerator:
             if type in types_flags:
                 return ver.pump_patch()
 
-        return ""
+        return ''
