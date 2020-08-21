@@ -1,10 +1,12 @@
 from argparse import ArgumentParser
 from .zpm_generator import ZPMGenerator
+from .zpw_generator import ZPWGenerator
 
 from changelog_generator.generator import generate_changelog
 
 systems = {
     "zpm": ZPMGenerator,
+    "zpw": ZPWGenerator,
 }
 
 def process_arguments() -> dict:
