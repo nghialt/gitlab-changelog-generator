@@ -5,10 +5,6 @@ import os.path
 import re
 
 from changelog_generator.calls import (
-    get_closed_issues_for_project,
-    get_commits_since_date,
-    get_last_commit_date,
-    get_last_tagged_release_date,
     get_commits_until_latest_bump,
 )
 from changelog_generator.log_handlers import logger
@@ -113,24 +109,6 @@ class ZPWGenerator:
                 modified_changelog.write(f'\n')
                 modified_changelog.write(''.join(original_changelog_data))
         return f'{self.file_path} updated successfully'
-
-
-    def get_closed_issues_since_last_tag(self, cli_args: dict) -> list:
-        last_tagged_release_date = get_last_tagged_release_date(cli_args)
-
-        closed_issues = get_closed_issues_for_project(cli_args)
-
-        closed_issues_since_tag = []
-        for issue in closed_issues:
-            logger.info(issue)
-            if dateutil.parser.parse(issue['closed_at']) > dateutil.parser.parse(
-                    last_tagged_release_date
-            ):
-                closed_issues_since_tag.append(
-                    {'closed_at': issue['closed_at'], 'title': issue['title']}
-                )
-
-        return closed_issues_since_tag
 
     def get_version(self, cli_args: dict) -> str:
         if 'version' in cli_args:
