@@ -12,7 +12,7 @@ systems = {
 def process_arguments() -> dict:
     parser = ArgumentParser(prog="changegen")
     parser.add_argument(
-        "-s",
+        "-sy",
         "--system",
         dest="system",
         help="specify system, available options: zpm, zpw",
@@ -48,9 +48,8 @@ def process_arguments() -> dict:
     )
     parser.add_argument(
         "-b",
-        "--branches",
-        nargs=2,
-        dest="branches",
+        "--branch",
+        dest="branch",
         help="specify GitLab branches to compare",
         required=True,
     )
@@ -59,7 +58,6 @@ def process_arguments() -> dict:
         "--version",
         dest="version",
         help="specify version number",
-        required=True,
     )
     parser.add_argument(
         "-t",
@@ -82,7 +80,6 @@ def process_arguments() -> dict:
         "--subproject",
         dest="sub_project",
         help="specify project to filter",
-        required=True,
     )
 
     args = parser.parse_args()
@@ -94,8 +91,7 @@ def process_arguments() -> dict:
         # "project_group": args.group,
         "project": args.project,
         "sub_project": args.sub_project,
-        "branch_one": args.branches[0],
-        "branch_two": args.branches[1],
+        "branch": args.branch,
         "version": args.version,
         "token": args.token,
         "ssl": args.ssl,
@@ -105,7 +101,7 @@ def process_arguments() -> dict:
 def main():
     cli_args = process_arguments()
     generator = None
-    generator = systems[cli_args.system]()
+    generator = systems[cli_args['system']]()
     if not generator:
         return
     generator.generate_changelog(cli_args)

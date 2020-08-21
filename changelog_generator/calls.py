@@ -201,7 +201,7 @@ def get_commits_until_latest_bump(cli_args: dict) -> list:
     existed_commits = {}
     while True:
         request_url = f"{cli_args['ip_address']}/api/v{cli_args['api_version']}/projects/{cli_args['project']}" \
-                      f"/repository/commits/?ref_name={cli_args['branch_one']}"
+                      f"/repository/commits/?ref_name={cli_args['branch']}"
         if until_date:
             request_url += f"&until={until_date}"
         logger.info(
