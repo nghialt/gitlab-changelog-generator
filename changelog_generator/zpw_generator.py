@@ -26,6 +26,7 @@ class ZPWGenerator:
     minor_types = {
         'feat': None,
         'chg': None,
+        'vendor': None,
     }
     type_map = {
         'fix': 'Fixed',
@@ -33,6 +34,7 @@ class ZPWGenerator:
         'chg': 'Changes',
         'chore': 'Additions',
         'test': 'Tests',
+        'vendor': 'Vendors',
         '': 'Others',
     }
     file_path = f'CHANGELOG.md'
@@ -155,8 +157,5 @@ class ZPWGenerator:
         for type in self.minor_types:
             if type in types_flags:
                 return ver.bump_minor()
-        for type in self.patch_types:
-            if type in types_flags:
-                return ver.pump_patch()
 
-        return ''
+        return ver.pump_patch()
