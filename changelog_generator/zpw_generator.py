@@ -111,7 +111,7 @@ class ZPWGenerator:
         return f'{self.file_path} updated successfully'
 
     def get_version(self, cli_args: dict) -> str:
-        if 'version' in cli_args:
+        if 'version' in cli_args and cli_args['version']:
             return cli_args['version']
         default_version = '0.0.0'
         if not os.path.isfile(self.file_path):
@@ -130,7 +130,7 @@ class ZPWGenerator:
         return default_version
 
     def get_next_version(self, version, types_flags, cli_args: dict) -> str:
-        if 'version' in cli_args:
+        if 'version' in cli_args and cli_args['version']:
             return cli_args['version']
         ver = semver.VersionInfo.parse(version)
         for type in self.minor_types:
