@@ -71,7 +71,10 @@ class ZPWGenerator:
                 commits_type_dict[''].append(commit)
 
         version = self.get_version(cli_args)
-        version = self.get_next_version(version, commits_type_dict, cli_args)
+        new_version = self.get_next_version(version, commits_type_dict, cli_args)
+        if version == new_version:
+            logger.info('No changes')
+            return
 
         # Determine whether a CHANGELOG.md file already exists
         if not os.path.isfile(self.file_path):
@@ -134,7 +137,10 @@ class ZPWGenerator:
             return cli_args['version']
         ver = semver.VersionInfo.parse(version)
         for type in self.minor_types:
-            if type in types_flags:
+            if type in types_flags and types_flags[type]:
                 return ver.bump_minor()
+        for type in self.patch_types:
+            if type in types_flags and types_flags[type]:
+                return ver.bump_patch()
 
-        return ver.pump_patch()
+        return version
