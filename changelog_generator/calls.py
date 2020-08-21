@@ -198,6 +198,7 @@ def get_commits_until_latest_bump(cli_args: dict) -> list:
 
     clean_response = []
     until_date = None
+    existed_commits = {}
     while True:
         request_url = f"{cli_args['ip_address']}/api/v{cli_args['api_version']}/projects/{cli_args['project']}" \
                       f"/repository/commits/?ref_name={cli_args['branch_one']}"
@@ -239,14 +240,15 @@ def get_commits_until_latest_bump(cli_args: dict) -> list:
             if re.match(r'^bump:.+$', title):
                 bump_found = True
                 break
+            if item['short_id'] in existed_commits:
+                continue
+            existed_commits[item['short_id']] = True
             clean_response.append(item)
         if bump_found:
             break
         until_date = response_json[-1]["created_at"]
         until_date = get_date_object(until_date) - datetime.timedelta(milliseconds=1)
         until_date = get_date_string(until_date)
-        clean_response = clean_response + response_json
-
 
     return sorted(
         clean_response,
