@@ -97,17 +97,18 @@ class ZPWGenerator:
                     for commit in commits:
                         logger.debug('commit ')
                         logger.debug(commit)
-                        lines = commit['message'].split('\n')
+                        lines = commit['message'].strip().split('\n')
                         modified_changelog.write(
                             f"  * {commit['committed_date'][:10]} - {lines[0]}"
                         )
 
-                        if not re.match('\(\![0-9]+\)$', lines[0]):
+                        if not re.match(r'^.+\(\![0-9]+\)$', lines[0]):
                             modified_changelog.write(f" ({commit['short_id']})")
 
+                        modified_changelog.write('\n')
                         if len(lines) > 1:
+                            modified_changelog.write('\n'.join('    ' + line for line in lines[1:] if line))
                             modified_changelog.write('\n')
-                        modified_changelog.write('\n'.join('    ' + line for line in lines[1:] if line))
 
                 modified_changelog.write(f'\n')
                 modified_changelog.write(''.join(original_changelog_data))
