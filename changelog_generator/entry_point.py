@@ -1,10 +1,23 @@
 from argparse import ArgumentParser
+from .zpm_generator import ZPMGenerator
+from .zpw_generator import ZPWGenerator
 
 from changelog_generator.generator import generate_changelog
 
+systems = {
+    "zpm": ZPMGenerator,
+    "zpw": ZPWGenerator,
+}
 
 def process_arguments() -> dict:
     parser = ArgumentParser(prog="changegen")
+    parser.add_argument(
+        "-sy",
+        "--system",
+        dest="system",
+        help="specify system, available options: zpm, zpw",
+        required=True,
+    )
     parser.add_argument(
         "-i",
         "--ip",
@@ -35,9 +48,8 @@ def process_arguments() -> dict:
     )
     parser.add_argument(
         "-b",
-        "--branches",
-        nargs=2,
-        dest="branches",
+        "--branch",
+        dest="branch",
         help="specify GitLab branches to compare",
         required=True,
     )
@@ -46,7 +58,6 @@ def process_arguments() -> dict:
         "--version",
         dest="version",
         help="specify version number",
-        required=True,
     )
     parser.add_argument(
         "-t",
@@ -69,19 +80,18 @@ def process_arguments() -> dict:
         "--subproject",
         dest="sub_project",
         help="specify project to filter",
-        required=True,
     )
 
     args = parser.parse_args()
 
     return {
+        "system": args.system,
         "ip_address": args.ip,
         "api_version": args.api,
         # "project_group": args.group,
         "project": args.project,
         "sub_project": args.sub_project,
-        "branch_one": args.branches[0],
-        "branch_two": args.branches[1],
+        "branch": args.branch,
         "version": args.version,
         "token": args.token,
         "ssl": args.ssl,
@@ -89,7 +99,12 @@ def process_arguments() -> dict:
 
 
 def main():
-    generate_changelog(process_arguments())
+    cli_args = process_arguments()
+    generator = None
+    generator = systems[cli_args['system']]()
+    if not generator:
+        return
+    generator.generate_changelog(cli_args)
 
 
 if __name__ == "__main__":
