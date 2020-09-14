@@ -85,7 +85,7 @@ class ZPWGenerator:
                 original_changelog_data = original_changelog_data[2:]
             with open(self.file_path, 'w') as modified_changelog:
                 modified_changelog.write('# CHANGELOG\n\n')
-                modified_changelog.write(f'## v{version} - {current_date}\n')
+                modified_changelog.write(f'## v{new_version} - {current_date}\n')
                 for type in self.type_order:
                     commits = commits_type_dict[type]
                     if not commits:
